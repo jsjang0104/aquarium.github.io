@@ -1,5 +1,7 @@
 # 둥둥 — 우리들의 아쿠아리움
 
+**배포 주소:** https://jsjang0104.github.io/aquarium.github.io/
+
 친구들의 얼굴을 입힌 물고기가 헤엄치는 인터랙티브 3D 아쿠아리움입니다. HTML, CSS, JavaScript와 Three.js로 만들었으며, 빌드 과정이나 백엔드 없이 정적 호스팅으로 실행합니다.
 
 ## 실행
@@ -36,7 +38,15 @@ location.reload();
 
 ## GitHub Pages
 
-저장소에 파일을 올린 후 Settings → Pages에서 배포할 브랜치와 루트(`/`)를 선택합니다. 별도의 npm 설치나 빌드가 필요하지 않습니다. 상대 경로를 사용하므로 사용자 사이트와 프로젝트 하위 경로 모두에서 사용할 수 있습니다. `.nojekyll` 파일을 포함합니다.
+현재 `gh-pages` 브랜치의 루트(`/`)를 GitHub Pages로 게시합니다. 원본 코드는 `main`에 있습니다. 별도의 npm 설치나 빌드가 필요하지 않으며 `.nojekyll` 파일을 포함합니다.
+
+수정 내용을 커밋한 뒤 두 브랜치를 함께 업로드하면 사이트에 반영됩니다. 현재 작업 환경에서는 GitHub 계정에 연결된 SSH 키를 사용합니다.
+
+```bash
+git push git@github.com:jsjang0104/aquarium.github.io.git main main:gh-pages
+```
+
+배포 진행 상황은 저장소의 Actions 탭에서 `pages build and deployment` 작업으로 확인할 수 있습니다. 상대 경로를 사용하므로 프로젝트 하위 경로에서도 사진과 3D 라이브러리가 정상 로드됩니다.
 
 ## 구성
 

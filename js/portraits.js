@@ -2,24 +2,31 @@ export const PALETTE = ['#f7b56b', '#83c8b5', '#e9a5bc', '#a6b7ee', '#e6d987'];
 export const DEFAULT_FISH = [
   {
     id: 'friend-1',
-    name: '친구 01',
+    name: '채붕이',
     src: './KakaoTalk_Photo_2026-09-14-21-55-43.jpeg',
     color: PALETTE[0],
-    crop: { x: 0.46, y: 0.3, zoom: 1.65 },
+    crop: { x: 0.45, y: 0.34, zoom: 1.45 },
   },
   {
     id: 'friend-2',
-    name: '친구 02',
+    name: '???',
     src: './KakaoTalk_Photo_2026-09-14-21-57-30.jpeg',
     color: PALETTE[1],
-    crop: { x: 0.5, y: 0.62, zoom: 1.1 },
+    crop: { x: 0.49, y: 0.63, zoom: 1.5 },
   },
   {
     id: 'friend-3',
-    name: '친구 03',
+    name: '꽉수',
     src: './KakaoTalk_Photo_2026-09-14-21-57-38.jpeg',
     color: PALETTE[2],
-    crop: { x: 0.57, y: 0.49, zoom: 2.2 },
+    crop: { x: 0.54, y: 0.49, zoom: 2.05 },
+  },
+  {
+    id: 'friend-4',
+    name: '하붕이',
+    src: './KakaoTalk_Photo_2026-09-14-23-38-10.jpeg',
+    color: PALETTE[3],
+    crop: { x: 0.42, y: 0.645, zoom: 1.1 },
   },
 ];
 const KEY = 'doongdoong.fish.v1';

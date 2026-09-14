@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071e24" />
+    <meta
+      name="description"
+      content="우리 얼굴로 헤엄치는 작은 바다. 친구들과 함께하는 인터랙티브 3D 아쿠아리움."
+    />
+    <title>둥둥 — 우리들의 아쿠아리움</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230d363c'/%3E%3Cpath d='M10 32l12-10v7c12-20 30-10 32 3-2 13-20 23-32 3v7z' fill='%23adf2d5'/%3E%3Ccircle cx='43' cy='29' r='3' fill='%230d363c'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three.module.js",
+          "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <symbol id="i-fish" viewBox="0 0 24 24">
+          <path d="m2 8 5 4-5 4V8Z" />
+          <path d="M7 12c5-10 12-7 15 0-3 7-10 10-15 0Z" />
+          <circle cx="17" cy="11" r=".8" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+        <symbol id="i-food" viewBox="0 0 24 24">
+          <path d="m8 3 8 2-2 8-8-2zM9 16v1m5 1v1m-9 1v1m13-8v1" />
+        </symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24">
+          <path d="M20 15A9 9 0 0 1 9 3a9 9 0 1 0 11 12Z" />
+        </symbol>
+        <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6" /></symbol>
+        <symbol id="i-full" viewBox="0 0 24 24">
+          <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6" /></symbol>
+      </defs>
+    </svg>
+    <div class="page-shell">
+      <header class="header">
+        <a class="brand" href="./" aria-label="둥둥 홈"
+          ><span class="brand-mark"
+            ><svg><use href="#i-fish" /></svg></span
+          ><span>둥둥<span class="brand-sub">DOONG DOONG</span></span></a
+        >
+        <span class="header-note">조금 이상하고, 아주 다정한 바다</span>
+        <span class="live-pill"><i></i> OUR LITTLE OCEAN</span>
+      </header>
+      <main>
+        <section class="intro">
+          <div>
+            <p class="eyebrow">AQUARIUM NO. 001</p>
+            <h1>오늘도, 우리답게 <span>둥둥.</span></h1>
+            <p class="intro-copy">익숙한 얼굴들이 헤엄치는 곳. 잠깐 쉬어가도 괜찮아요.</p>
+          </div>
+          <button id="add-fish" class="button primary">
+            <svg><use href="#i-plus" /></svg>친구 입수시키기
+          </button>
+        </section>
+        <section class="tank-card" id="tank-card" aria-label="인터랙티브 3D 아쿠아리움">
+          <div
+            id="aquarium"
+            role="img"
+            aria-label="얼굴 사진을 입힌 물고기와 흔들리는 해초가 있는 3D 수조"
+          ></div>
+          <div class="tank-top">
+            <span class="tank-label"><span class="status-dot"></span>우리들의 아쿠아리움</span
+            ><span class="water-label">작은 바다, 큰 평화 <span aria-hidden="true">≈</span></span>
+          </div>
+          <div class="scene-loading" id="scene-loading">
+            <span class="loader"></span>
+            <p>작은 바다를 채우고 있어요…</p>
+          </div>
+          <div class="scene-error" id="scene-error" role="alert" hidden>
+            <h2>바다를 열 수 없어요</h2>
+            <p>WebGL 2를 지원하는 브라우저에서 하드웨어 가속을 켜고 다시 열어주세요.</p>
+            <button class="button" onclick="location.reload()">다시 시도</button>
+          </div>
+          <div class="tank-side">
+            <button
+              id="night"
+              class="icon-button"
+              title="밤 조명"
+              aria-label="밤 조명"
+              aria-pressed="false"
+            >
+              <svg><use href="#i-moon" /></svg></button
+            ><button
+              id="reset-view"
+              class="icon-button"
+              title="시점 초기화"
+              aria-label="시점 초기화"
+            >
+              <svg><use href="#i-reset" /></svg></button
+            ><button id="fullscreen" class="icon-button" title="전체 화면" aria-label="전체 화면">
+              <svg><use href="#i-full" /></svg>
+            </button>
+          </div>
+          <div class="tank-bottom">
+            <span class="drag-hint"><span>↔</span> 드래그로 둘러보기 <b>·</b> 스크롤로 확대</span
+            ><span class="depth-label">JUST KEEP SWIMMING</span>
+          </div>
+        </section>
+        <section class="control-bar" aria-label="수조 제어">
+          <div class="ocean-status">
+            <span class="status-dot"></span><span id="swim-status">자유롭게 헤엄치는 중</span>
+          </div>
+          <div class="playback">
+            <button id="pause" class="button quiet" aria-pressed="false">
+              <span id="pause-icon">Ⅱ</span><span id="pause-label">잠깐 멈춤</span></button
+            ><span class="divider"></span><label for="speed">헤엄 속도</label
+            ><input id="speed" type="range" min="0.5" max="2" step="0.1" value="1" /><output
+              id="speed-value"
+              for="speed"
+              >1.0×</output
+            >
+          </div>
+          <button id="feed" class="button feed">
+            <svg><use href="#i-food" /></svg>먹이 주기<span class="key-hint">F</span>
+          </button>
+        </section>
+        <section class="residents-section">
+          <div class="section-heading">
+            <h2>이 바다의 주민들 <span id="resident-count">3</span></h2>
+            <p>친구를 눌러 이름과 얼굴을 바꿔보세요</p>
+          </div>
+          <div class="residents" id="residents"></div>
+        </section>
+      </main>
+      <footer>
+        <span>각자의 속도로, 함께 유영 중.</span
+        ><span>MADE OF FRIENDS & A LITTLE BIT OF WATER <span class="footer-fish">≈</span></span>
+      </footer>
+    </div>
+    <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" hidden />
+    <dialog id="fish-dialog" aria-labelledby="dialog-title">
+      <form id="fish-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">MEET YOUR FISH</p>
+            <h2 id="dialog-title">나만의 물고기</h2>
+          </div>
+          <button type="button" id="close-dialog" class="icon-button" aria-label="닫기">
+            <svg><use href="#i-close" /></svg>
+          </button>
+        </div>
+        <div class="portrait-stage">
+          <canvas
+            id="crop-preview"
+            width="320"
+            height="320"
+            aria-label="물고기에 적용할 얼굴 미리보기"
+          ></canvas
+          ><span>얼굴을 동그라미 안에 맞춰주세요</span>
+        </div>
+        <div class="crop-controls">
+          <label for="crop-zoom">확대</label
+          ><input id="crop-zoom" type="range" min="1" max="5" step="0.05" value="1" /><label
+            for="crop-x"
+            >좌우</label
+          ><input id="crop-x" type="range" min="0" max="1" step="0.01" value="0.5" /><label
+            for="crop-y"
+            >상하</label
+          ><input id="crop-y" type="range" min="0" max="1" step="0.01" value="0.5" />
+        </div>
+        <label class="field-label" for="fish-name">물고기 이름</label
+        ><input
+          id="fish-name"
+          type="text"
+          maxlength="20"
+          required
+          autocomplete="off"
+          placeholder="이 친구의 이름은?"
+        />
+        <div class="color-row">
+          <label for="fish-color">물고기 색</label
+          ><input id="fish-color" type="color" value="#f7b56b" /><button
+            id="replace-photo"
+            type="button"
+            class="text-button"
+          >
+            사진 바꾸기 ↗
+          </button>
+        </div>
+        <p class="privacy-note">추가한 사진은 서버로 전송되지 않고 이 브라우저에 저장돼요.</p>
+        <div class="dialog-actions">
+          <button id="remove-fish" type="button" class="text-button danger">떠나보내기</button
+          ><button id="save-fish" class="button primary" type="submit">
+            바다에 반영하기 <span>↗</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <noscript><p class="noscript">물고기를 만나려면 JavaScript를 켜주세요.</p></noscript>
+    <script type="module">
+      import('./js/app.js').catch((error) => {
+        console.error(error);
+        document.querySelector('#scene-loading').hidden = true;
+        document.querySelector('#scene-error').hidden = false;
+      });
+    </script>
+  </body>
+</html>

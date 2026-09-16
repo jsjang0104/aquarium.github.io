@@ -29,56 +29,12 @@ export const DEFAULT_FISH = [
     crop: { x: 0.42, y: 0.645, zoom: 1.1 },
   },
 ];
-const KEY = 'doongdoong.fish.v1';
-export const MAX_FISH = 12;
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-export function readFish() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY));
-    if (!Array.isArray(saved) || saved.length > MAX_FISH) return structuredClone(DEFAULT_FISH);
-    return saved.map((f, i) => {
-      if (
-        !f ||
-        typeof f.name !== 'string' ||
-        typeof f.id !== 'string' ||
-        typeof f.src !== 'string' ||
-        !(
-          /^data:image\/(jpeg|png|webp);base64,/.test(f.src) ||
-          DEFAULT_FISH.some((d) => d.src === f.src)
-        )
-      )
-        throw new Error('Invalid saved fish');
-      const num = (value, fallback) => (Number.isFinite(value) ? value : fallback);
-      return {
-        id: f.id,
-        name: f.name.slice(0, 20) || `친구 ${i + 1}`,
-        src: f.src,
-        color: /^#[0-9a-f]{6}$/i.test(f.color) ? f.color : PALETTE[i % 5],
-        crop: {
-          x: clamp(num(f.crop?.x, 0.5), 0, 1),
-          y: clamp(num(f.crop?.y, 0.5), 0, 1),
-          zoom: clamp(num(f.crop?.zoom, 1), 1, 5),
-        },
-      };
-    });
-  } catch {
-    return structuredClone(DEFAULT_FISH);
-  }
-}
-export function saveFish(fish) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(fish));
-    return true;
-  } catch {
-    return false;
-  }
-}
 export function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () =>
-      reject(new Error('사진을 읽을 수 없어요. JPG, PNG, WebP 사진을 골라주세요.'));
+    img.onerror = () => reject(new Error('기본 주민 사진을 읽을 수 없어요.'));
     img.src = src;
   });
 }
@@ -115,21 +71,4 @@ export async function portraitCanvas(fish) {
     ctx.fillText('◡', 128, 145);
   }
   return canvas;
-}
-export async function readPhoto(file) {
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type))
-    throw new Error('JPG, PNG, WebP 사진을 골라주세요.');
-  if (file.size > 15 * 1024 * 1024) throw new Error('15MB 이하의 사진을 골라주세요.');
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await loadImage(url);
-    const scale = Math.min(1, 1000 / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.85);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
 }

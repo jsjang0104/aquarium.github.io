@@ -174,15 +174,6 @@ h1 span {
   background: #245050;
   transform: translateY(-1px);
 }
-.button.primary {
-  background: var(--mint);
-  color: #173b32;
-  border-color: var(--mint);
-  box-shadow: 0 4px 20px #adf2d509;
-}
-.button.primary:hover {
-  background: #d0ffe8;
-}
 .tank-card {
   position: relative;
   isolation: isolate;
@@ -381,6 +372,9 @@ input[type='range'] {
   margin: 0;
 }
 .residents {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
@@ -395,13 +389,6 @@ input[type='range'] {
   background: linear-gradient(130deg, #18373b, #0c292e);
   padding: 15px 16px;
   min-width: 0;
-  transition:
-    border-color 0.2s,
-    transform 0.2s;
-}
-.resident:hover {
-  transform: translateY(-3px);
-  border-color: #a9ddc16b;
 }
 .resident img {
   width: 49px;
@@ -435,25 +422,6 @@ input[type='range'] {
   display: inline-block;
   border-radius: 50%;
   margin-right: 5px;
-}
-.resident-arrow {
-  color: #7f9e96;
-  font-size: 17px;
-}
-.add-card {
-  border: 1px dashed #a8cbbb30;
-  border-radius: 11px;
-  background: #a8cbbb03;
-  color: #97b3a9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 11px;
-  min-height: 81px;
-}
-.add-card:hover {
-  background: #a8cbbb0b;
 }
 footer {
   border-top: 1px solid var(--line);
@@ -511,124 +479,6 @@ footer > span:last-child {
 :focus-visible {
   outline: 2px solid #d8f7b0;
   outline-offset: 5px;
-}
-dialog {
-  width: 430px;
-  max-width: calc(100% - 28px);
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
-  border: 1px solid #648e7d66;
-  border-radius: 20px;
-  padding: 25px;
-  background: #102e33;
-  color: var(--text);
-  box-shadow: 0 30px 100px #0008;
-}
-dialog::backdrop {
-  background: #001518b3;
-  backdrop-filter: blur(9px);
-}
-.dialog-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.dialog-heading .eyebrow {
-  font-size: 9px;
-  margin-bottom: 8px;
-}
-.dialog-heading h2 {
-  font-size: 22px;
-  font-weight: 500;
-  margin: 0;
-}
-.portrait-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  margin: 21px 0 18px;
-}
-.portrait-stage canvas {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 3px solid #b5efd4;
-  background: #163b40;
-}
-.portrait-stage span {
-  font-size: 10px;
-  color: var(--muted);
-}
-.crop-controls {
-  display: grid;
-  grid-template-columns: 30px 1fr;
-  gap: 7px 10px;
-  align-items: center;
-  margin-bottom: 17px;
-}
-.crop-controls label {
-  font-size: 11px;
-  color: var(--muted);
-}
-.crop-controls input {
-  width: 100%;
-}
-.field-label {
-  display: block;
-  font-size: 11px;
-  margin-bottom: 8px;
-}
-#fish-name {
-  width: 100%;
-  padding: 11px 12px;
-  border: 1px solid #ffffff26;
-  background: #061f25;
-  border-radius: 7px;
-  color: var(--text);
-  font-size: 13px;
-}
-.color-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0;
-  font-size: 11px;
-}
-.color-row input {
-  width: 34px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-.text-button {
-  background: none;
-  border: 0;
-  padding: 6px 0;
-  color: #adccbf;
-  font-size: 11px;
-}
-.color-row .text-button {
-  margin-left: auto;
-}
-.privacy-note {
-  font-size: 10px;
-  line-height: 1.7;
-  color: var(--muted);
-}
-.dialog-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 19px;
-}
-.dialog-actions .primary {
-  margin-left: auto;
-}
-.danger {
-  color: #d5a79b;
 }
 .toast {
   position: fixed;
@@ -700,16 +550,16 @@ dialog::backdrop {
     height: 81px;
   }
   .brand {
-    font-size: 25px;
+    min-width: 0;
+    font-size: 18px;
+    line-height: 1.4;
   }
   .brand-mark {
     width: 37px;
     height: 37px;
   }
   .live-pill {
-    font-size: 7px;
-    padding: 8px 10px;
-    letter-spacing: 1px;
+    display: none;
   }
   .intro {
     padding: 27px 0 23px;
@@ -725,10 +575,6 @@ dialog::backdrop {
   }
   .intro-copy {
     font-size: 11px;
-  }
-  .intro .primary {
-    font-size: 11px;
-    min-height: 38px;
   }
   .tank-card {
     height: 460px;
@@ -804,6 +650,7 @@ dialog::backdrop {
     font-size: 13px;
   }
   .residents {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
   }
   .resident {
@@ -819,13 +666,6 @@ dialog::backdrop {
   }
   .resident-detail {
     font-size: 8px;
-  }
-  .resident-arrow {
-    display: none;
-  }
-  .add-card {
-    min-height: 74px;
-    font-size: 10px;
   }
   .residents-section {
     padding-top: 23px;
@@ -843,22 +683,6 @@ dialog::backdrop {
   }
   .footer-fish {
     font-size: 12px;
-  }
-  dialog {
-    padding: 20px;
-  }
-  .portrait-stage {
-    margin: 15px 0;
-  }
-  .portrait-stage canvas {
-    width: 120px;
-    height: 120px;
-  }
-  .dialog-heading h2 {
-    font-size: 20px;
-  }
-  .dialog-actions {
-    margin-top: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

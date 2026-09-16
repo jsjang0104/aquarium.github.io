@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createPortraitMaterial } from './fish-material.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const rand = (min, max) => min + Math.random() * (max - min);
 const up = new THREE.Vector3(0, 1, 0);
@@ -270,8 +271,13 @@ export class Aquarium {
   }
   createFish(color, canvas) {
     const group = new THREE.Group();
-    const mat = this.material(color, { roughness: 0.38, metalness: 0.08 });
-    const body = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), mat);
+    const mat = canvas
+      ? createPortraitMaterial(color, canvas)
+      : this.material(color, { roughness: 0.38, metalness: 0.08 });
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(1, canvas ? 48 : 32, canvas ? 32 : 20),
+      mat,
+    );
     body.scale.set(1.05, 0.65, 0.43);
     group.add(body);
     const makeFin = (points, position) => {
@@ -330,22 +336,7 @@ export class Aquarium {
       );
       fin.rotation.x = side * 0.65;
       fins.push(fin);
-      if (canvas) {
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.colorSpace = THREE.SRGBColorSpace;
-        const portrait = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.12, 1.18),
-          new THREE.MeshBasicMaterial({
-            map: texture,
-            transparent: true,
-            depthWrite: false,
-            toneMapped: false,
-          }),
-        );
-        portrait.position.set(0.28, 0.025, side * 0.447);
-        portrait.rotation.y = side < 0 ? Math.PI : 0;
-        group.add(portrait);
-      } else {
+      if (!canvas) {
         const eye = new THREE.Mesh(
           new THREE.SphereGeometry(0.085, 10, 8),
           this.material('#152e2e'),

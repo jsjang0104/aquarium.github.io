@@ -61,7 +61,7 @@
         <section class="tank-card" id="tank-card" aria-label="인터랙티브 3D 아쿠아리움">
           <div
             id="aquarium"
-            role="img"
+            role="group"
             aria-label="얼굴 사진을 입힌 물고기와 흔들리는 해초가 있는 3D 수조"
           ></div>
           <div class="tank-top">
@@ -98,7 +98,8 @@
             </button>
           </div>
           <div class="tank-bottom">
-            <span class="drag-hint"><span>↔</span> 드래그로 둘러보기 <b>·</b> 스크롤로 확대</span
+            <span class="drag-hint" id="gesture-hint"
+              >톡 누르기 · 길게 눌러 기포 · 움직여 따라오기</span
             ><span class="depth-label">JUST KEEP SWIMMING</span>
           </div>
         </section>
@@ -120,9 +121,17 @@
             <svg><use href="#i-food" /></svg>먹이 주기<span class="key-hint">F</span>
           </button>
         </section>
+        <section class="play-controls" aria-label="수조 놀이">
+          <div class="mode-switch" role="group" aria-label="수조 조작 모드">
+            <button id="play-mode" type="button" aria-pressed="true">놀아주기</button>
+            <button id="view-mode" type="button" aria-pressed="false">둘러보기</button>
+          </div>
+          <p id="play-status" role="status">톡 누르기 · 움직여 따라오기 · 길게 눌러 기포</p>
+          <span class="play-keys">T 톡톡 · B 기포</span>
+        </section>
         <section class="residents-section">
           <div class="section-heading">
-            <h2>이 바다의 주민들 <span id="resident-count">4</span></h2>
+            <h2>이 바다의 주민들 <span id="resident-count">6</span></h2>
             <p>각자의 속도로 함께 헤엄치는 친구들</p>
           </div>
           <ul class="residents" id="residents" aria-label="수조 주민"></ul>

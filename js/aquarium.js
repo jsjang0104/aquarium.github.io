@@ -369,13 +369,13 @@ export class Aquarium {
           ),
       );
       const direction = i % 2 ? -1 : 1;
-      mesh.rotation.y = previous?.mesh.rotation.y ?? (direction < 0 ? Math.PI : 0);
+      const velocity =
+        previous?.velocity ?? new THREE.Vector3(direction * 0.45, rand(-0.2, 0.2), 0.9);
+      mesh.rotation.y = previous?.mesh.rotation.y ?? Math.atan2(-velocity.z, velocity.x);
       return {
         id: record.id,
         mesh,
-        velocity:
-          previous?.velocity ??
-          new THREE.Vector3(direction * rand(0.7, 1.2), rand(-0.2, 0.2), rand(-0.2, 0.2)),
+        velocity,
         target: previous?.target ?? new THREE.Vector3(rand(-8, 8), rand(-2.5, 3), rand(-2.5, 3)),
         timer: rand(2, 5),
         phase: rand(0, 6),
@@ -415,6 +415,7 @@ export class Aquarium {
   }
   update(dt) {
     this.time += dt;
+    this.play?.update(dt);
     const t = this.time;
     this.sand.uniforms.uTime.value = t;
     for (const plant of this.plants) {
@@ -447,7 +448,11 @@ export class Aquarium {
     }
     for (const f of this.fish) {
       f.timer -= dt;
-      if (this.food.length) {
+      const intent = this.play?.getIntent(f);
+      if (intent) {
+        f.target.copy(intent.target);
+        f.timer = 0;
+      } else if (this.food.length) {
         let nearest = this.food[0];
         for (const p of this.food)
           if (
@@ -464,7 +469,9 @@ export class Aquarium {
         .clone()
         .sub(f.mesh.position)
         .normalize()
-        .multiplyScalar(this.food.length ? 2.6 : 1.25 + Math.sin(t + f.phase) * 0.3);
+        .multiplyScalar(
+          intent?.speed ?? (this.food.length ? 2.6 : 1.25 + Math.sin(t + f.phase) * 0.3),
+        );
       for (const other of this.fish)
         if (other !== f) {
           const diff = f.mesh.position.clone().sub(other.mesh.position),
@@ -481,7 +488,7 @@ export class Aquarium {
       let diff = Math.atan2(Math.sin(yaw - f.mesh.rotation.y), Math.cos(yaw - f.mesh.rotation.y));
       f.mesh.rotation.y += diff * Math.min(1, dt * 3);
       f.mesh.rotation.z = Math.sin(t * 2 + f.phase) * 0.045;
-      f.mesh.userData.tail.rotation.y = Math.sin(t * 8 + f.phase) * 0.45;
+      f.mesh.userData.tail.rotation.y = Math.sin(t * (intent?.scared ? 14 : 8) + f.phase) * 0.45;
       f.mesh.userData.fins.forEach(
         (fin, i) => (fin.rotation.y = Math.sin(t * 6 + f.phase + i) * 0.3),
       );

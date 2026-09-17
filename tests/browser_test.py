@@ -26,7 +26,7 @@ class AquariumTest(unittest.TestCase):
         expect(self.page.locator('body')).to_have_attribute('data-ready','true',timeout=10000)
     def test_scene_and_controls(self):
         self.open()
-        expect(self.page.locator('.resident')).to_have_count(4)
+        expect(self.page.locator('.resident')).to_have_count(6)
         expect(self.page.locator('#aquarium canvas')).to_be_visible()
         self.page.locator('#pause').click()
         expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','true')
@@ -60,7 +60,7 @@ class AquariumTest(unittest.TestCase):
           return {initialBounds,schoolSpread,bounds,moved,limited,eaten,cleared};
         }""")
         self.assertTrue(all(result.values()),result)
-    def test_portraits_follow_the_body_surface_on_both_sides(self):
+    def test_portrait_material_follows_body_surface(self):
         self.open()
         result=self.page.evaluate("""async()=>{
           const THREE=await import('three');
@@ -86,23 +86,123 @@ class AquariumTest(unittest.TestCase):
           return {surface,lit,curvedNormals};
         }""")
         self.assertTrue(all(result.values()),result)
+    def test_photo_is_on_the_head_not_the_back_or_flanks(self):
+        self.open()
+        samples=self.page.evaluate("""async()=>{
+          const THREE=await import('three'); const {Aquarium}=await import('./js/aquarium.js');
+          const factory=Object.create(Aquarium.prototype), canvas=document.createElement('canvas');
+          canvas.width=canvas.height=32;const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,32,32);
+          const fish=factory.createFish('#000000',canvas);
+          const scene=new THREE.Scene();scene.add(fish,new THREE.AmbientLight('#ffffff',3));
+          const camera=new THREE.PerspectiveCamera(35,1,.1,20),renderer=new THREE.WebGLRenderer();
+          renderer.setSize(64,64);const target=new THREE.WebGLRenderTarget(64,64);renderer.setRenderTarget(target);
+          const result=[];for(const point of [[5,0,0],[-5,0,0],[0,0,5],[0,0,-5]]){
+            camera.position.set(...point);camera.lookAt(0,0,0);renderer.render(scene,camera);
+            const pixel=new Uint8Array(4);renderer.readRenderTargetPixels(target,32,32,1,1,pixel);result.push(pixel[0]);
+          }
+          factory.disposeObject(fish);target.dispose();renderer.dispose();return result;
+        }""")
+        self.assertGreater(samples[0],150,samples)
+        self.assertTrue(all(value<30 for value in samples[1:]),samples)
+    def test_play_gestures_and_view_mode(self):
+        self.open()
+        expect(self.page.locator('#play-mode')).to_have_attribute('aria-pressed','true')
+        canvas=self.page.locator('#aquarium canvas');box=canvas.bounding_box()
+        x,y=box['x']+box['width']*.5,box['y']+box['height']*.45
+        self.page.mouse.click(x,y)
+        expect(self.page.locator('#toast')).to_contain_text('톡')
+        self.page.mouse.move(x+40,y+10)
+        expect(self.page.locator('#play-status')).to_contain_text('친구들이 손끝을 따라와요')
+        self.page.mouse.down();self.page.wait_for_timeout(550)
+        expect(self.page.locator('#play-status')).to_contain_text('기포를 만드는 중')
+        self.page.mouse.up()
+        expect(self.page.locator('#play-status')).not_to_contain_text('기포를 만드는 중')
+        self.page.locator('#view-mode').click()
+        expect(self.page.locator('#view-mode')).to_have_attribute('aria-pressed','true')
+        expect(self.page.locator('#play-status')).to_contain_text('둘러보기')
+        self.page.mouse.click(x,y);expect(self.page.locator('#play-status')).to_contain_text('둘러보기')
+        self.page.locator('#feed').click();expect(self.page.locator('#toast')).to_contain_text('먹이')
+    def test_play_steering_and_effect_cleanup(self):
+        self.open()
+        result=self.page.evaluate("""async()=>{
+          const THREE=await import('three'); const {Aquarium}=await import('./js/aquarium.js');
+          const {TankPlay}=await import('./js/tank-play.js');const {DEFAULT_FISH,portraitCanvas}=await import('./js/portraits.js');
+          const host=document.createElement('div');host.style.cssText='width:600px;height:400px';document.body.append(host);
+          const tank=new Aquarium(host,{reducedMotion:true});tank.renderer.setAnimationLoop(null);
+          tank.setFish([DEFAULT_FISH[0]],[await portraitCanvas(DEFAULT_FISH[0])]);tank.play=new TankPlay(tank);
+          const fish=tank.fish[0];fish.phase=0;fish.mesh.position.set(-4,0,0);fish.velocity.set(0,0,0);
+          const goal=new THREE.Vector3(3,0,3);const before=fish.mesh.position.distanceTo(goal);
+          tank.play.followAt(goal);for(let i=0;i<90;i++)tank.update(1/60);
+          const followed=fish.mesh.position.distanceTo(goal)<before-1;
+          tank.play.clear();fish.mesh.position.set(0,0,0);fish.velocity.set(0,0,0);
+          const tap=new THREE.Vector3(1,0,0);tank.play.tapAt(tap);
+          for(let i=0;i<30;i++)tank.update(1/60);
+          const fled=fish.mesh.position.distanceTo(tap)>1.2;
+          for(let i=0;i<80;i++)tank.update(1/60);
+          const curious=tank.play.getIntent(fish)?.scared!==true;
+          tank.feed();const feedingWins=tank.play.getIntent(fish)===null;
+          tank.play.emitBubbles(goal,200);const limited=tank.play.particles.length===96;
+          for(let i=0;i<10;i++)tank.play.tapAt(tap);const rippleLimited=tank.play.ripples.length===6;
+          for(let i=0;i<480;i++)tank.update(1/60);
+          const cleaned=tank.play.particles.length===0&&tank.play.ripples.length===0;
+          tank.play.dispose();tank.observer.disconnect();tank.controls.dispose();tank.renderer.dispose();host.remove();
+          return {followed,fled,curious,feedingWins,limited,rippleLimited,cleaned};
+        }""")
+        self.assertTrue(all(result.values()),result)
+    def test_touch_pinch_and_cancel_do_not_leave_bubbles_running(self):
+        self.page.set_viewport_size({'width':390,'height':844});self.open()
+        session=self.context.new_cdp_session(self.page)
+        box=self.page.locator('#aquarium canvas').bounding_box()
+        x,y=box['x']+box['width']*.4,box['y']+box['height']*.45
+        session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y,'id':1}]})
+        self.page.wait_for_timeout(550)
+        expect(self.page.locator('#play-status')).to_contain_text('기포를 만드는 중')
+        session.send('Input.dispatchTouchEvent',{'type':'touchCancel','touchPoints':[]})
+        expect(self.page.locator('#play-status')).not_to_contain_text('기포를 만드는 중')
+        session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y,'id':2},{'x':x+65,'y':y,'id':3}]})
+        session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-10,'y':y,'id':2},{'x':x+85,'y':y,'id':3}]})
+        self.page.wait_for_timeout(550)
+        expect(self.page.locator('#play-status')).not_to_contain_text('기포를 만드는 중')
+        session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+        session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y,'id':4}]})
+        session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x+30,'y':y,'id':4}]})
+        expect(self.page.locator('#play-status')).to_contain_text('친구들이 손끝을 따라와요')
+        session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+        expect(self.page.locator('#play-status')).not_to_contain_text('친구들이 손끝을 따라와요')
+    def test_lost_pointer_capture_allows_next_gesture(self):
+        self.open()
+        result=self.page.evaluate("""async()=>{
+          const {Aquarium}=await import('./js/aquarium.js');const {TankPlay}=await import('./js/tank-play.js');
+          const host=document.createElement('div');host.style.cssText='width:600px;height:400px';document.body.append(host);
+          const tank=new Aquarium(host,{reducedMotion:true});tank.renderer.setAnimationLoop(null);
+          tank.controls.dispose();const play=new TankPlay(tank),canvas=tank.renderer.domElement;
+          const down=id=>canvas.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,pointerType:'touch',button:0,clientX:100,clientY:100}));
+          down(11);canvas.dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:11,pointerType:'touch'}));
+          down(12);await new Promise(resolve=>setTimeout(resolve,500));
+          const resumed=play.emitting===true;
+          canvas.dispatchEvent(new PointerEvent('pointercancel',{pointerId:12}));
+          const stopped=!play.emitting&&play.pointers.size===0;
+          play.dispose();tank.observer.disconnect();tank.controls.dispose();tank.renderer.dispose();host.remove();
+          return {resumed,stopped};
+        }""")
+        self.assertTrue(all(result.values()),result)
     def test_saved_residents_are_ignored_and_cards_are_read_only(self):
         self.open()
         self.page.evaluate("""()=>localStorage.setItem('doongdoong.fish.v1',JSON.stringify([
           {id:'old',name:'이전 브라우저 물고기',src:'./KakaoTalk_Photo_2026-09-14-21-55-43.jpeg',color:'#abcdef',crop:{x:.5,y:.5,zoom:2}}
         ]))""")
-        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(4)
-        expect(self.page.locator('.resident-name')).to_have_text(['채붕이','???','꽉수','하붕이'])
+        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(6)
+        expect(self.page.locator('.resident-name')).to_have_text(['채붕이','???','장꽉수','하붕이','페어빌레','아그다'])
         expect(self.page.locator('input[type=file], dialog, #add-fish, .add-card')).to_have_count(0)
         expect(self.page.locator('#residents button')).to_have_count(0)
         self.page.locator('.resident').first.click()
         expect(self.page.get_by_role('dialog')).to_have_count(0)
         self.page.locator('#feed').click(); expect(self.page.locator('#toast')).to_contain_text('먹이')
-        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(4)
+        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(6)
     def test_storage_is_not_required_or_accessed(self):
         self.page.add_init_script("""window.storageCalls=[];
           for(const key of ['localStorage','sessionStorage']) Object.defineProperty(window,key,{get(){window.storageCalls.push(key);throw new Error('Storage is unavailable')}});""")
-        self.open(); expect(self.page.locator('.resident')).to_have_count(4)
+        self.open(); expect(self.page.locator('.resident')).to_have_count(6)
         self.page.locator('#feed').click(); expect(self.page.locator('#toast')).to_contain_text('먹이')
         self.assertEqual(self.page.evaluate('window.storageCalls'),[])
     def test_mobile_reduced_motion_and_keyboard_feeding(self):

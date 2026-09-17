@@ -1,4 +1,5 @@
 import { Aquarium } from './aquarium.js';
+import { TankPlay } from './tank-play.js';
 import { DEFAULT_FISH, portraitCanvas } from './portraits.js';
 const $ = (selector) => document.querySelector(selector);
 const fish = DEFAULT_FISH;
@@ -10,11 +11,19 @@ function toast(message) {
   toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 4200);
 }
 function sceneError() {
+  aquarium?.play?.dispose();
   $('#scene-loading').hidden = true;
   $('#scene-error').hidden = false;
-  ['#feed', '#pause', '#night', '#reset-view', '#fullscreen', '#speed'].forEach(
-    (id) => ($(id).disabled = true),
-  );
+  [
+    '#feed',
+    '#pause',
+    '#night',
+    '#reset-view',
+    '#fullscreen',
+    '#speed',
+    '#play-mode',
+    '#view-mode',
+  ].forEach((id) => ($(id).disabled = true));
 }
 try {
   aquarium = new Aquarium($('#aquarium'), {
@@ -67,6 +76,7 @@ function syncPause() {
 }
 function feed() {
   if (!aquarium || $('#feed').disabled) return;
+  aquarium.play?.clear();
   aquarium.paused = false;
   syncPause();
   toast(
@@ -78,6 +88,7 @@ function feed() {
 $('#feed').addEventListener('click', feed);
 $('#pause').addEventListener('click', () => {
   aquarium.paused = !aquarium.paused;
+  if (aquarium.paused) aquarium.play?.clear();
   syncPause();
 });
 $('#speed').addEventListener('input', (event) => {
@@ -105,15 +116,50 @@ document.addEventListener('keydown', (event) => {
     ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName) ||
     event.ctrlKey ||
     event.metaKey ||
-    event.altKey
+    event.altKey ||
+    event.repeat
   )
     return;
   if (event.key.toLowerCase() === 'f') {
     event.preventDefault();
     feed();
+  } else if (aquarium?.play?.mode === 'play' && !$('#play-mode').disabled) {
+    if (event.key.toLowerCase() === 't') {
+      event.preventDefault();
+      aquarium.play.tapAt(aquarium.controls.target);
+    }
+    if (event.key.toLowerCase() === 'b') {
+      event.preventDefault();
+      aquarium.play.bubbleBurst();
+    }
   }
 });
+function setMode(mode) {
+  aquarium?.play?.setMode(mode);
+  $('#play-mode').setAttribute('aria-pressed', String(mode === 'play'));
+  $('#view-mode').setAttribute('aria-pressed', String(mode === 'view'));
+  $('#gesture-hint').textContent =
+    mode === 'play'
+      ? '톡 누르기 · 길게 눌러 기포 · 움직여 따라오기'
+      : '드래그로 둘러보기 · 스크롤 / 두 손가락으로 확대';
+}
+$('#play-mode').addEventListener('click', () => setMode('play'));
+$('#view-mode').addEventListener('click', () => setMode('view'));
 await renderFish();
+if (aquarium && $('#scene-error').hidden) {
+  aquarium.play = new TankPlay(aquarium, {
+    onActivity(type) {
+      aquarium.paused = false;
+      syncPause();
+      if (type === 'tap') toast('톡톡! 놀란 친구들이 잠깐 흩어졌다 돌아와요.');
+      if (type === 'bubbles') toast('보글보글, 기포 사이로 헤엄쳐요.');
+    },
+    onStatus(message) {
+      if ($('#play-status').textContent !== message) $('#play-status').textContent = message;
+    },
+  });
+}
+
 syncPause();
 $('#scene-loading').hidden = true;
 document.body.dataset.ready = 'true';

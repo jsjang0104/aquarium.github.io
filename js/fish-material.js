@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-/** Paint a portrait onto both sides of the fish's ellipsoid, under its existing lighting. */
+/** Wrap one portrait around the fish's +X-facing head, with the body's lighting. */
 export function createPortraitMaterial(color, canvas) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -23,20 +23,20 @@ export function createPortraitMaterial(color, canvas) {
         '#include <map_fragment>',
         `
           vec3 portraitPosition = normalize(vPortraitPosition);
-          float longitude = atan(portraitPosition.x, max(abs(portraitPosition.z), 0.00001));
+          // The nose points along +X. From that direction, screen-right is -Z.
+          float longitude = atan(-portraitPosition.z, portraitPosition.x);
           float latitude = asin(clamp(portraitPosition.y, -1.0, 1.0));
-          float facingSide = portraitPosition.z < 0.0 ? -1.0 : 1.0;
           vec2 portraitUv = vec2(
-            0.5 + facingSide * (longitude - 0.28) / 1.8,
-            0.5 + (latitude - 0.04) / 2.2
+            0.5 + longitude / 2.65,
+            0.5 + (latitude - 0.03) / 2.4
           );
           float portraitRadius = length((portraitUv - 0.5) * 2.0);
-          float feather = 1.0 - smoothstep(0.80, 0.98, portraitRadius);
+          float feather = 1.0 - smoothstep(0.82, 0.98, portraitRadius);
           vec4 portraitColor = texture2D(map, clamp(portraitUv, 0.0, 1.0));
           diffuseColor.rgb = mix(diffuseColor.rgb, portraitColor.rgb, portraitColor.a * feather);
         `,
       );
   };
-  material.customProgramCacheKey = () => 'ellipsoid-portrait-v1';
+  material.customProgramCacheKey = () => 'head-portrait-v2';
   return material;
 }

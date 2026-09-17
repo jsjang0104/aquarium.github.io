@@ -1,5 +1,6 @@
 import { Aquarium } from './aquarium.js';
 import { TankPlay } from './tank-play.js';
+import { FishDuel } from './fish-duel.js';
 import { DEFAULT_FISH, portraitCanvas } from './portraits.js';
 const $ = (selector) => document.querySelector(selector);
 const fish = DEFAULT_FISH;
@@ -12,6 +13,7 @@ function toast(message) {
 }
 function sceneError() {
   aquarium?.play?.dispose();
+  aquarium?.duel?.dispose();
   $('#scene-loading').hidden = true;
   $('#scene-error').hidden = false;
   [
@@ -23,6 +25,10 @@ function sceneError() {
     '#speed',
     '#play-mode',
     '#view-mode',
+    '#duel-first',
+    '#duel-second',
+    '#duel-start',
+    '#duel-cancel',
   ].forEach((id) => ($(id).disabled = true));
 }
 try {
@@ -76,6 +82,7 @@ function syncPause() {
 }
 function feed() {
   if (!aquarium || $('#feed').disabled) return;
+  aquarium.duel?.cancel();
   aquarium.play?.clear();
   aquarium.paused = false;
   syncPause();
@@ -160,6 +167,52 @@ if (aquarium && $('#scene-error').hidden) {
   });
 }
 
+function syncDuelControls() {
+  const available = aquarium?.duel && $('#scene-error').hidden;
+  const active = Boolean(aquarium?.duel?.active);
+  const first = $('#duel-first').value,
+    second = $('#duel-second').value;
+  $('#duel-first').disabled = $('#duel-second').disabled = !available || active;
+  $('#duel-start').disabled = !available || active || !first || !second || first === second;
+  $('#duel-cancel').disabled = !available || !active;
+}
+if (aquarium && $('#scene-error').hidden) {
+  const name = (id) => fish.find((record) => record.id === id)?.name ?? '';
+  aquarium.duel = new FishDuel(aquarium, {
+    onChange({ phase, ids, winner }) {
+      const stages = {
+        approach: '선수 입장!',
+        circle: '빙글빙글 탐색전',
+        charge: '돌진! 한판 승부',
+        celebrate: `${name(winner)}의 승리 세리머니!`,
+      };
+      const result =
+        phase === 'finished'
+          ? `${name(winner)} 승리! 다시 평화로운 바다로.`
+          : phase === 'cancelled'
+            ? '대결 끝! 사이좋게 헤엄쳐요.'
+            : stages[phase];
+      $('#duel-banner').hidden = ['finished', 'cancelled'].includes(phase);
+      $('#duel-banner').textContent = `${name(ids[0])} vs ${name(ids[1])} · ${result}`;
+      $('#duel-status').textContent = `${name(ids[0])} vs ${name(ids[1])} · ${result}`;
+      if (phase === 'finished') toast(`${name(winner)} 승리! 다음 승부는 누가 이길까요?`);
+      syncDuelControls();
+    },
+  });
+  for (const id of ['#duel-first', '#duel-second']) {
+    fish.forEach((record) => $(id).add(new Option(record.name, record.id)));
+    $(id).addEventListener('change', syncDuelControls);
+  }
+}
+$('#duel-start').addEventListener('click', () => {
+  if (aquarium?.duel?.start([$('#duel-first').value, $('#duel-second').value])) {
+    aquarium.paused = false;
+    syncPause();
+    $('#tank-card').scrollIntoView({ block: 'center', behavior: 'instant' });
+  }
+});
+$('#duel-cancel').addEventListener('click', () => aquarium?.duel?.cancel());
+syncDuelControls();
 syncPause();
 $('#scene-loading').hidden = true;
 document.body.dataset.ready = 'true';

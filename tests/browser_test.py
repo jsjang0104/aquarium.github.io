@@ -213,6 +213,59 @@ class AquariumTest(unittest.TestCase):
         expect(self.page.locator('#toast')).to_contain_text('먹이')
         expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','false')
         self.page.screenshot(path='/tmp/aquarium-fixed-mobile.png',full_page=True)
+    def test_duel_selection_cancel_and_feeding(self):
+        self.open()
+        start=self.page.locator('#duel-start')
+        expect(start).to_be_disabled()
+        self.page.locator('#duel-first').select_option('friend-5')
+        self.page.locator('#duel-second').select_option('friend-5')
+        expect(start).to_be_disabled()
+        self.page.locator('#duel-second').select_option('friend-6')
+        expect(start).to_be_enabled();start.click()
+        expect(self.page.locator('#duel-status')).to_contain_text('페어빌레 vs 아그다')
+        expect(self.page.locator('#duel-first')).to_be_disabled()
+        self.page.locator('#pause').click()
+        expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','true')
+        self.page.locator('#duel-cancel').click()
+        expect(start).to_be_enabled()
+        start.click();expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','false')
+        self.page.locator('#feed').click()
+        expect(start).to_be_enabled()
+        expect(self.page.locator('#duel-cancel')).to_be_disabled()
+        expect(self.page.locator('#toast')).to_contain_text('먹이')
+    def test_duel_moves_only_selected_fish_and_cleans_up(self):
+        self.open()
+        result=self.page.evaluate("""async()=>{
+          const {Aquarium}=await import('./js/aquarium.js');
+          const module=await import('./js/fish-duel.js').catch(()=>null);
+          if(!module)return {feature:false};
+          const {DEFAULT_FISH,portraitCanvas}=await import('./js/portraits.js');
+          const host=document.createElement('div');host.style.cssText='width:600px;height:400px';document.body.append(host);
+          const tank=new Aquarium(host,{reducedMotion:true});tank.renderer.setAnimationLoop(null);
+          const records=DEFAULT_FISH.slice(0,3);tank.setFish(records,await Promise.all(records.map(portraitCanvas)));
+          const events=[];tank.duel=new module.FishDuel(tank,{onChange:event=>events.push(event)});
+          const invalid=!tank.duel.start(['friend-1','friend-1'])&&!tank.duel.start(['friend-1','missing']);
+          const baseline=tank.scene.children.length;
+          const started=tank.duel.start(['friend-1','friend-2']);
+          const exclusive=!tank.duel.start(['friend-2','friend-3'])&&tank.duel.getIntent(tank.fish[2])===null;
+          const before=tank.fish[0].mesh.position.clone();let bounded=true;
+          tank.fish[0].mesh.position.set(-8,.6,2);tank.fish[0].velocity.set(0,0,0);
+          for(let i=0;i<150;i++)tank.update(1/60);
+          const approached=tank.fish[0].mesh.position.x>-5;
+          const bypassesFood=(tank.feed(),tank.duel.getIntent(tank.fish[0])!==null);
+          for(let i=0;i<1000;i++){
+            tank.update(1/60);
+            bounded&&=tank.fish.every(f=>Number.isFinite(f.mesh.position.x)&&Math.abs(f.mesh.position.x)<=9.5&&Math.abs(f.mesh.position.z)<=3.7);
+          }
+          const moved=tank.fish[0].mesh.position.distanceTo(before)>.2;
+          const ended=!tank.duel.active&&events.some(e=>e.phase==='finished'&&['friend-1','friend-2'].includes(e.winner));
+          const cleaned=tank.scene.children.length===baseline&&tank.duel.getIntent(tank.fish[0])===null;
+          tank.duel.start(['friend-2','friend-3']);tank.duel.cancel();
+          const cancelled=!tank.duel.active&&tank.scene.children.length===baseline;
+          tank.duel.dispose();tank.observer.disconnect();tank.controls.dispose();tank.renderer.dispose();host.remove();
+          return {invalid,started,exclusive,approached,bypassesFood,bounded,moved,ended,cleaned,cancelled};
+        }""")
+        self.assertTrue(all(result.values()),result)
     def test_webgl_failure(self):
         self.page.add_init_script("const original=HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext=function(type,...args){return type.startsWith('webgl')?null:original.call(this,type,...args)}")
         self.page.goto(os.environ.get('AQUARIUM_URL','http://127.0.0.1:4173'))

@@ -97,6 +97,7 @@
               <svg><use href="#i-full" /></svg>
             </button>
           </div>
+          <div id="duel-banner" class="duel-banner" hidden></div>
           <div class="tank-bottom">
             <span class="drag-hint" id="gesture-hint"
               >톡 누르기 · 길게 눌러 기포 · 움직여 따라오기</span
@@ -128,6 +129,30 @@
           </div>
           <p id="play-status" role="status">톡 누르기 · 움직여 따라오기 · 길게 눌러 기포</p>
           <span class="play-keys">T 톡톡 · B 기포</span>
+        </section>
+        <section class="duel-panel" aria-labelledby="duel-heading">
+          <div class="duel-heading">
+            <h2 id="duel-heading">한판 붙자! <span>FISH VS FISH</span></h2>
+            <p>두 친구의 짧고 시끌벅적한 대결</p>
+          </div>
+          <div class="duel-picker">
+            <label for="duel-first"
+              >민트 팀<select id="duel-first" disabled>
+                <option value="">첫 번째 물고기</option>
+              </select></label
+            >
+            <span class="duel-vs" aria-hidden="true">VS</span>
+            <label for="duel-second"
+              >코랄 팀<select id="duel-second" disabled>
+                <option value="">두 번째 물고기</option>
+              </select></label
+            >
+            <button id="duel-start" class="button" type="button" disabled>대결 시작</button>
+            <button id="duel-cancel" class="button" type="button" disabled>그만 싸워</button>
+          </div>
+          <p id="duel-status" role="status">
+            서로 다른 두 마리를 골라주세요. 승자는 매번 무작위로 정해져요.
+          </p>
         </section>
         <section class="residents-section">
           <div class="section-heading">

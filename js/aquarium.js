@@ -416,6 +416,7 @@ export class Aquarium {
   update(dt) {
     this.time += dt;
     this.play?.update(dt);
+    this.duel?.update(dt);
     const t = this.time;
     this.sand.uniforms.uTime.value = t;
     for (const plant of this.plants) {
@@ -448,7 +449,7 @@ export class Aquarium {
     }
     for (const f of this.fish) {
       f.timer -= dt;
-      const intent = this.play?.getIntent(f);
+      const intent = this.duel?.getIntent(f) ?? this.play?.getIntent(f);
       if (intent) {
         f.target.copy(intent.target);
         f.timer = 0;

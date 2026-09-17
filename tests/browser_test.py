@@ -26,7 +26,7 @@ class AquariumTest(unittest.TestCase):
         expect(self.page.locator('body')).to_have_attribute('data-ready','true',timeout=10000)
     def test_scene_and_controls(self):
         self.open()
-        expect(self.page.locator('.resident')).to_have_count(6)
+        expect(self.page.locator('.resident')).to_have_count(7)
         expect(self.page.locator('#aquarium canvas')).to_be_visible()
         self.page.locator('#pause').click()
         expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','true')
@@ -191,18 +191,18 @@ class AquariumTest(unittest.TestCase):
         self.page.evaluate("""()=>localStorage.setItem('doongdoong.fish.v1',JSON.stringify([
           {id:'old',name:'이전 브라우저 물고기',src:'./KakaoTalk_Photo_2026-09-14-21-55-43.jpeg',color:'#abcdef',crop:{x:.5,y:.5,zoom:2}}
         ]))""")
-        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(6)
-        expect(self.page.locator('.resident-name')).to_have_text(['채붕이','???','장꽉수','하붕이','페어빌레','아그다'])
+        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(7)
+        expect(self.page.locator('.resident-name')).to_have_text(['채붕이','???','장꽉수','하붕이','페어빌레','아그다','홍햄'])
         expect(self.page.locator('input[type=file], dialog, #add-fish, .add-card')).to_have_count(0)
         expect(self.page.locator('#residents button')).to_have_count(0)
         self.page.locator('.resident').first.click()
         expect(self.page.get_by_role('dialog')).to_have_count(0)
         self.page.locator('#feed').click(); expect(self.page.locator('#toast')).to_contain_text('먹이')
-        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(6)
+        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(7)
     def test_storage_is_not_required_or_accessed(self):
         self.page.add_init_script("""window.storageCalls=[];
           for(const key of ['localStorage','sessionStorage']) Object.defineProperty(window,key,{get(){window.storageCalls.push(key);throw new Error('Storage is unavailable')}});""")
-        self.open(); expect(self.page.locator('.resident')).to_have_count(6)
+        self.open(); expect(self.page.locator('.resident')).to_have_count(7)
         self.page.locator('#feed').click(); expect(self.page.locator('#toast')).to_contain_text('먹이')
         self.assertEqual(self.page.evaluate('window.storageCalls'),[])
     def test_mobile_reduced_motion_and_keyboard_feeding(self):

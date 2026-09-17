@@ -42,6 +42,13 @@ export const DEFAULT_FISH = [
     color: PALETTE[4],
     crop: { x: 0.515, y: 0.465, zoom: 2.0 },
   },
+  {
+    id: 'friend-7',
+    name: '홍햄',
+    src: './KakaoTalk_Photo_2026-09-17-17-21-11.jpeg',
+    color: PALETTE[1],
+    crop: { x: 0.5, y: 0.47, zoom: 1.12 },
+  },
 ];
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 export function loadImage(src) {

@@ -5,7 +5,7 @@ export const DEFAULT_FISH = [
     name: '채붕이',
     src: './KakaoTalk_Photo_2026-09-14-21-55-43.jpeg',
     color: PALETTE[0],
-    crop: { x: 0.45, y: 0.34, zoom: 1.45 },
+    crop: { x: 0.45, y: 0.34, zoom: 1.5 },
   },
   {
     id: 'friend-2',
@@ -19,7 +19,7 @@ export const DEFAULT_FISH = [
     name: '장꽉수',
     src: './KakaoTalk_Photo_2026-09-14-21-57-38.jpeg',
     color: PALETTE[2],
-    crop: { x: 0.54, y: 0.49, zoom: 2.05 },
+    crop: { x: 0.54, y: 0.49, zoom: 2.2 },
   },
   {
     id: 'friend-4',
@@ -40,14 +40,14 @@ export const DEFAULT_FISH = [
     name: '아그다',
     src: './KakaoTalk_Photo_2026-09-16-22-58-49.jpeg',
     color: PALETTE[4],
-    crop: { x: 0.515, y: 0.465, zoom: 2.0 },
+    crop: { x: 0.515, y: 0.465, zoom: 2.2 },
   },
   {
     id: 'friend-7',
     name: '홍햄',
     src: './KakaoTalk_Photo_2026-09-17-17-21-11.jpeg',
     color: PALETTE[1],
-    crop: { x: 0.5, y: 0.47, zoom: 1.12 },
+    crop: { x: 0.5, y: 0.47, zoom: 1.15 },
   },
 ];
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));

@@ -1,6 +1,6 @@
 import { Aquarium } from './aquarium.js';
 import { TankPlay } from './tank-play.js';
-import { FishDuel } from './fish-duel.js';
+import { FishDance } from './fish-dance.js';
 import { DEFAULT_FISH, portraitCanvas } from './portraits.js';
 const $ = (selector) => document.querySelector(selector);
 const fish = DEFAULT_FISH;
@@ -13,7 +13,7 @@ function toast(message) {
 }
 function sceneError() {
   aquarium?.play?.dispose();
-  aquarium?.duel?.dispose();
+  aquarium?.dance?.dispose();
   $('#scene-loading').hidden = true;
   $('#scene-error').hidden = false;
   [
@@ -25,10 +25,7 @@ function sceneError() {
     '#speed',
     '#play-mode',
     '#view-mode',
-    '#duel-first',
-    '#duel-second',
-    '#duel-start',
-    '#duel-cancel',
+    '#dance',
   ].forEach((id) => ($(id).disabled = true));
 }
 try {
@@ -78,11 +75,15 @@ function syncPause() {
   $('#pause').setAttribute('aria-pressed', String(aquarium.paused));
   $('#pause-icon').textContent = aquarium.paused ? '▷' : 'Ⅱ';
   $('#pause-label').textContent = aquarium.paused ? '다시 헤엄' : '잠깐 멈춤';
-  $('#swim-status').textContent = aquarium.paused ? '잠시 쉬어가는 중' : '자유롭게 헤엄치는 중';
+  $('#swim-status').textContent = aquarium.paused
+    ? '잠시 쉬어가는 중'
+    : aquarium.dance?.active
+      ? '다 같이 박자에 맞춰 춤추는 중'
+      : '자유롭게 헤엄치는 중';
+  syncDanceControls();
 }
 function feed() {
   if (!aquarium || $('#feed').disabled) return;
-  aquarium.duel?.cancel();
   aquarium.play?.clear();
   aquarium.paused = false;
   syncPause();
@@ -101,6 +102,7 @@ $('#pause').addEventListener('click', () => {
 $('#speed').addEventListener('input', (event) => {
   aquarium.speed = Number(event.target.value);
   $('#speed-value').textContent = `${aquarium.speed.toFixed(1)}×`;
+  syncDanceControls();
 });
 $('#night').addEventListener('click', () => {
   const night = $('#night').getAttribute('aria-pressed') !== 'true';
@@ -145,10 +147,7 @@ function setMode(mode) {
   aquarium?.play?.setMode(mode);
   $('#play-mode').setAttribute('aria-pressed', String(mode === 'play'));
   $('#view-mode').setAttribute('aria-pressed', String(mode === 'view'));
-  $('#gesture-hint').textContent =
-    mode === 'play'
-      ? '톡 누르기 · 길게 눌러 기포 · 움직여 따라오기'
-      : '드래그로 둘러보기 · 스크롤 / 두 손가락으로 확대';
+  syncDanceControls();
 }
 $('#play-mode').addEventListener('click', () => setMode('play'));
 $('#view-mode').addEventListener('click', () => setMode('view'));
@@ -167,52 +166,38 @@ if (aquarium && $('#scene-error').hidden) {
   });
 }
 
-function syncDuelControls() {
-  const available = aquarium?.duel && $('#scene-error').hidden;
-  const active = Boolean(aquarium?.duel?.active);
-  const first = $('#duel-first').value,
-    second = $('#duel-second').value;
-  $('#duel-first').disabled = $('#duel-second').disabled = !available || active;
-  $('#duel-start').disabled = !available || active || !first || !second || first === second;
-  $('#duel-cancel').disabled = !available || !active;
+function syncDanceControls() {
+  const active = Boolean(aquarium?.dance?.active);
+  $('#dance').disabled = !aquarium?.dance || !$('#scene-error').hidden;
+  $('#dance').setAttribute('aria-pressed', String(active));
+  $('#dance-label').textContent = active ? '춤 그만추기' : '춤추기';
+  $('#dance-banner').hidden = !active;
+  $('#gesture-hint').textContent =
+    aquarium?.play?.mode === 'view'
+      ? '드래그로 둘러보기 · 스크롤 / 두 손가락으로 확대'
+      : active
+        ? '다 같이 댄스 타임 · 춤 그만추기를 누르면 다시 헤엄쳐요'
+        : '톡 누르기 · 길게 눌러 기포 · 움직여 따라오기';
+  $('#tank-card').classList.toggle('is-dancing', active);
+  const bpm = Math.round(120 * (aquarium?.speed ?? 1));
+  $('#dance-bpm').textContent = `${bpm} BPM`;
+  $('#dance-status').textContent = active
+    ? aquarium.paused
+      ? '잠깐 쉬는 중 · 다시 헤엄을 누르면 춤이 이어져요.'
+      : '모두 정면을 보고 박자에 맞춰 춤추는 중! 다시 누르면 자유롭게 헤엄쳐요.'
+    : '버튼을 누르면 조명이 켜지고, 모든 친구들이 함께 춤춰요.';
 }
 if (aquarium && $('#scene-error').hidden) {
-  const name = (id) => fish.find((record) => record.id === id)?.name ?? '';
-  aquarium.duel = new FishDuel(aquarium, {
-    onChange({ phase, ids, winner }) {
-      const stages = {
-        approach: '선수 입장!',
-        circle: '빙글빙글 탐색전',
-        charge: '돌진! 한판 승부',
-        celebrate: `${name(winner)}의 승리 세리머니!`,
-      };
-      const result =
-        phase === 'finished'
-          ? `${name(winner)} 승리! 다시 평화로운 바다로.`
-          : phase === 'cancelled'
-            ? '대결 끝! 사이좋게 헤엄쳐요.'
-            : stages[phase];
-      $('#duel-banner').hidden = ['finished', 'cancelled'].includes(phase);
-      $('#duel-banner').textContent = `${name(ids[0])} vs ${name(ids[1])} · ${result}`;
-      $('#duel-status').textContent = `${name(ids[0])} vs ${name(ids[1])} · ${result}`;
-      if (phase === 'finished') toast(`${name(winner)} 승리! 다음 승부는 누가 이길까요?`);
-      syncDuelControls();
-    },
-  });
-  for (const id of ['#duel-first', '#duel-second']) {
-    fish.forEach((record) => $(id).add(new Option(record.name, record.id)));
-    $(id).addEventListener('change', syncDuelControls);
-  }
+  aquarium.dance = new FishDance(aquarium, { onChange: syncPause });
 }
-$('#duel-start').addEventListener('click', () => {
-  if (aquarium?.duel?.start([$('#duel-first').value, $('#duel-second').value])) {
-    aquarium.paused = false;
-    syncPause();
+$('#dance').addEventListener('click', () => {
+  if (!aquarium?.dance) return;
+  if (aquarium.dance.active) aquarium.dance.stop();
+  else if (aquarium.dance.start()) {
+    toast('댄스 타임! 모두 함께 박자를 타요.');
     $('#tank-card').scrollIntoView({ block: 'center', behavior: 'instant' });
   }
 });
-$('#duel-cancel').addEventListener('click', () => aquarium?.duel?.cancel());
-syncDuelControls();
 syncPause();
 $('#scene-loading').hidden = true;
 document.body.dataset.ready = 'true';

@@ -11,7 +11,9 @@ export class Aquarium {
     this.plants = [];
     this.food = [];
     this.time = 0;
+    this.reducedMotion = reducedMotion;
     this.paused = reducedMotion;
+    this.night = false;
     this.speed = 1;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#0a3944');
@@ -349,6 +351,7 @@ export class Aquarium {
     return group;
   }
   setFish(records, canvases) {
+    this.dance?.stop();
     const old = new Map(this.fish.map((f) => [f.id, f]));
     for (const f of this.fish) {
       this.scene.remove(f.mesh);
@@ -393,6 +396,7 @@ export class Aquarium {
     });
   }
   feed() {
+    this.dance?.stop();
     if (this.food.length > 0) return false;
     const x = rand(-4, 4);
     for (let i = 0; i < 15; i++) {
@@ -406,17 +410,19 @@ export class Aquarium {
     return true;
   }
   setNight(night) {
+    this.night = Boolean(night);
     this.scene.background.set(night ? '#061e32' : '#0a3944');
     this.scene.fog.color.set(night ? '#072a3e' : '#0c424b');
     this.ambient.intensity = night ? 0.85 : 2.2;
     this.sun.intensity = night ? 1 : 3.6;
     this.sun.color.set(night ? '#7faaff' : '#fff4cc');
     this.renderer.toneMappingExposure = night ? 0.85 : 1.22;
+    this.dance?.applyLighting();
   }
   update(dt) {
     this.time += dt;
     this.play?.update(dt);
-    this.duel?.update(dt);
+    this.dance?.update(dt);
     const t = this.time;
     this.sand.uniforms.uTime.value = t;
     for (const plant of this.plants) {
@@ -448,8 +454,9 @@ export class Aquarium {
       item.mesh.position.y -= dt * 0.4;
     }
     for (const f of this.fish) {
+      if (this.dance?.active) continue;
       f.timer -= dt;
-      const intent = this.duel?.getIntent(f) ?? this.play?.getIntent(f);
+      const intent = this.play?.getIntent(f);
       if (intent) {
         f.target.copy(intent.target);
         f.timer = 0;
@@ -504,6 +511,7 @@ export class Aquarium {
       return true;
     });
     for (const f of this.school) {
+      if (this.dance?.active) continue;
       f.mesh.position.set(
         Math.sin(t * 0.15 + f.phase) * 8,
         Math.sin(t * 0.3 + f.phase) * 1.2 + 1.8,
@@ -517,8 +525,9 @@ export class Aquarium {
     const dt = Math.min((now - this.last) / 1000, 0.04);
     this.last = now;
     if (document.hidden) return;
-    if (!this.paused) this.update(dt * this.speed);
     this.controls.update();
+    if (!this.paused) this.update(dt * this.speed);
+    else this.dance?.faceCamera();
     this.renderer.render(this.scene, this.camera);
   }
 }

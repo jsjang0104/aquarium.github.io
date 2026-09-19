@@ -74,9 +74,11 @@ export class TankPlay {
   status(message) {
     this.onStatus(
       message ??
-        (this.mode === 'view'
-          ? '둘러보기 · 드래그로 시점 회전'
-          : '톡 누르기 · 움직여 따라오기 · 길게 눌러 기포'),
+        (this.aquarium.dance?.active
+          ? '다 같이 춤추는 중 · 둘러보기로 무대를 감상해요'
+          : this.mode === 'view'
+            ? '둘러보기 · 드래그로 시점 회전'
+            : '톡 누르기 · 움직여 따라오기 · 길게 눌러 기포'),
     );
   }
   setMode(mode) {
@@ -98,7 +100,7 @@ export class TankPlay {
     return point ? clampPoint(point) : new THREE.Vector3(0, 0, 3.1);
   }
   pointerDown(event) {
-    if (event.button !== 0 || this.mode !== 'play') return;
+    if (this.aquarium.dance?.active || event.button !== 0 || this.mode !== 'play') return;
     this.pointers.add(event.pointerId);
     if (this.pointers.size > 1) {
       this.multiTouch = true;
@@ -127,7 +129,7 @@ export class TankPlay {
     }, HOLD_MS);
   }
   pointerMove(event) {
-    if (this.mode !== 'play' || this.multiTouch) return;
+    if (this.aquarium.dance?.active || this.mode !== 'play' || this.multiTouch) return;
     const point = this.pointAt(event.clientX, event.clientY);
     if (this.gesture) {
       if (this.gesture.id !== event.pointerId) return;
@@ -187,11 +189,13 @@ export class TankPlay {
     this.fright = null;
   }
   followAt(point) {
+    if (this.aquarium.dance?.active) return;
     this.followTarget = clampPoint(point.clone());
     this.followUntil = this.time + 3;
     this.status('친구들이 손끝을 따라와요');
   }
   tapAt(point) {
+    if (this.aquarium.dance?.active) return;
     const location = clampPoint(point.clone());
     this.followTarget = null;
     this.fright = { point: location, until: this.time + 1.1 };
@@ -230,10 +234,12 @@ export class TankPlay {
     this.bubbleInterest = { point: location, until: this.time + 3 };
   }
   bubbleBurst() {
+    if (this.aquarium.dance?.active) return;
     this.onActivity('bubbles');
     this.emitBubbles(new THREE.Vector3(0, -1.8, 3.1), 24);
   }
   getIntent(fish) {
+    if (this.aquarium.dance?.active) return null;
     const position = fish.mesh.position;
     if (
       this.fright &&

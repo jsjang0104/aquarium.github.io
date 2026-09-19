@@ -97,7 +97,10 @@
               <svg><use href="#i-full" /></svg>
             </button>
           </div>
-          <div id="duel-banner" class="duel-banner" hidden></div>
+          <div id="dance-banner" class="dance-banner" hidden>
+            <span class="dance-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            EVERYBODY DANCE <span id="dance-bpm">120 BPM</span>
+          </div>
           <div class="tank-bottom">
             <span class="drag-hint" id="gesture-hint"
               >톡 누르기 · 길게 눌러 기포 · 움직여 따라오기</span
@@ -130,33 +133,26 @@
           <p id="play-status" role="status">톡 누르기 · 움직여 따라오기 · 길게 눌러 기포</p>
           <span class="play-keys">T 톡톡 · B 기포</span>
         </section>
-        <section class="duel-panel" aria-labelledby="duel-heading">
-          <div class="duel-heading">
-            <h2 id="duel-heading">한판 붙자! <span>FISH VS FISH</span></h2>
-            <p>두 친구의 짧고 시끌벅적한 대결</p>
+        <section class="dance-panel" aria-labelledby="dance-heading">
+          <div class="dance-copy">
+            <h2 id="dance-heading">물속 댄스 타임 <span>ALL TOGETHER</span></h2>
+            <p id="dance-status" role="status">
+              버튼을 누르면 조명이 켜지고, 모든 친구들이 함께 춤춰요.
+            </p>
           </div>
-          <div class="duel-picker">
-            <label for="duel-first"
-              >민트 팀<select id="duel-first" disabled>
-                <option value="">첫 번째 물고기</option>
-              </select></label
-            >
-            <span class="duel-vs" aria-hidden="true">VS</span>
-            <label for="duel-second"
-              >코랄 팀<select id="duel-second" disabled>
-                <option value="">두 번째 물고기</option>
-              </select></label
-            >
-            <button id="duel-start" class="button" type="button" disabled>대결 시작</button>
-            <button id="duel-cancel" class="button" type="button" disabled>그만 싸워</button>
-          </div>
-          <p id="duel-status" role="status">
-            서로 다른 두 마리를 골라주세요. 승자는 매번 무작위로 정해져요.
-          </p>
+          <button
+            id="dance"
+            class="button dance-button"
+            type="button"
+            aria-pressed="false"
+            disabled
+          >
+            <span aria-hidden="true">♫</span><span id="dance-label">춤추기</span>
+          </button>
         </section>
         <section class="residents-section">
           <div class="section-heading">
-            <h2>이 바다의 주민들 <span id="resident-count">7</span></h2>
+            <h2>이 바다의 주민들 <span id="resident-count">9</span></h2>
             <p>각자의 속도로 함께 헤엄치는 친구들</p>
           </div>
           <ul class="residents" id="residents" aria-label="수조 주민"></ul>

@@ -26,7 +26,7 @@ class AquariumTest(unittest.TestCase):
         expect(self.page.locator('body')).to_have_attribute('data-ready','true',timeout=10000)
     def test_scene_and_controls(self):
         self.open()
-        expect(self.page.locator('.resident')).to_have_count(7)
+        expect(self.page.locator('.resident')).to_have_count(9)
         expect(self.page.locator('#aquarium canvas')).to_be_visible()
         self.page.locator('#pause').click()
         expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','true')
@@ -191,18 +191,18 @@ class AquariumTest(unittest.TestCase):
         self.page.evaluate("""()=>localStorage.setItem('doongdoong.fish.v1',JSON.stringify([
           {id:'old',name:'이전 브라우저 물고기',src:'./KakaoTalk_Photo_2026-09-14-21-55-43.jpeg',color:'#abcdef',crop:{x:.5,y:.5,zoom:2}}
         ]))""")
-        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(7)
-        expect(self.page.locator('.resident-name')).to_have_text(['채붕이','???','장꽉수','하붕이','페어빌레','아그다','홍햄'])
+        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(9)
+        expect(self.page.locator('.resident-name')).to_have_text(['채붕이','???','장꽉수','하붕이','페어빌레','아그다','홍햄','레전드 세일러문 하츠투하츠 쵀정우','이  강  준'])
         expect(self.page.locator('input[type=file], dialog, #add-fish, .add-card')).to_have_count(0)
         expect(self.page.locator('#residents button')).to_have_count(0)
         self.page.locator('.resident').first.click()
         expect(self.page.get_by_role('dialog')).to_have_count(0)
         self.page.locator('#feed').click(); expect(self.page.locator('#toast')).to_contain_text('먹이')
-        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(7)
+        self.page.reload(); expect(self.page.locator('.resident')).to_have_count(9)
     def test_storage_is_not_required_or_accessed(self):
         self.page.add_init_script("""window.storageCalls=[];
           for(const key of ['localStorage','sessionStorage']) Object.defineProperty(window,key,{get(){window.storageCalls.push(key);throw new Error('Storage is unavailable')}});""")
-        self.open(); expect(self.page.locator('.resident')).to_have_count(7)
+        self.open(); expect(self.page.locator('.resident')).to_have_count(9)
         self.page.locator('#feed').click(); expect(self.page.locator('#toast')).to_contain_text('먹이')
         self.assertEqual(self.page.evaluate('window.storageCalls'),[])
     def test_mobile_reduced_motion_and_keyboard_feeding(self):
@@ -213,59 +213,84 @@ class AquariumTest(unittest.TestCase):
         expect(self.page.locator('#toast')).to_contain_text('먹이')
         expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','false')
         self.page.screenshot(path='/tmp/aquarium-fixed-mobile.png',full_page=True)
-    def test_duel_selection_cancel_and_feeding(self):
+    def test_dance_toggle_pause_and_feeding(self):
         self.open()
-        start=self.page.locator('#duel-start')
-        expect(start).to_be_disabled()
-        self.page.locator('#duel-first').select_option('friend-5')
-        self.page.locator('#duel-second').select_option('friend-5')
-        expect(start).to_be_disabled()
-        self.page.locator('#duel-second').select_option('friend-6')
-        expect(start).to_be_enabled();start.click()
-        expect(self.page.locator('#duel-status')).to_contain_text('페어빌레 vs 아그다')
-        expect(self.page.locator('#duel-first')).to_be_disabled()
+        dance=self.page.get_by_role('button',name='춤추기',exact=True)
+        expect(dance).to_be_enabled();dance.click()
+        expect(self.page.locator('#dance')).to_have_attribute('aria-pressed','true')
+        expect(self.page.locator('#dance-banner')).to_be_visible()
+        expect(self.page.locator('#dance-status')).to_contain_text('박자')
+        self.page.locator('#speed').fill('1.5')
+        expect(self.page.locator('#dance-bpm')).to_have_text('180 BPM')
         self.page.locator('#pause').click()
         expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','true')
-        self.page.locator('#duel-cancel').click()
-        expect(start).to_be_enabled()
-        start.click();expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','false')
-        self.page.locator('#feed').click()
-        expect(start).to_be_enabled()
-        expect(self.page.locator('#duel-cancel')).to_be_disabled()
+        expect(self.page.locator('#dance-status')).to_contain_text('잠깐')
+        self.page.locator('#pause').click()
+        self.page.locator('#dance').click()
+        expect(self.page.locator('#dance')).to_have_attribute('aria-pressed','false')
+        expect(self.page.locator('#dance-banner')).to_be_hidden()
+        self.page.locator('#dance').click();self.page.locator('#feed').click()
+        expect(self.page.locator('#dance')).to_have_attribute('aria-pressed','false')
         expect(self.page.locator('#toast')).to_contain_text('먹이')
-    def test_duel_moves_only_selected_fish_and_cleans_up(self):
+        expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','false')
+
+    def test_dance_faces_camera_keeps_the_beat_and_cleans_up(self):
         self.open()
         result=self.page.evaluate("""async()=>{
-          const {Aquarium}=await import('./js/aquarium.js');
-          const module=await import('./js/fish-duel.js').catch(()=>null);
-          if(!module)return {feature:false};
+          const THREE=await import('three');const {Aquarium}=await import('./js/aquarium.js');
           const {DEFAULT_FISH,portraitCanvas}=await import('./js/portraits.js');
+          const {FishDance}=await import('./js/fish-dance.js');
           const host=document.createElement('div');host.style.cssText='width:600px;height:400px';document.body.append(host);
-          const tank=new Aquarium(host,{reducedMotion:true});tank.renderer.setAnimationLoop(null);
-          const records=DEFAULT_FISH.slice(0,3);tank.setFish(records,await Promise.all(records.map(portraitCanvas)));
-          const events=[];tank.duel=new module.FishDuel(tank,{onChange:event=>events.push(event)});
-          const invalid=!tank.duel.start(['friend-1','friend-1'])&&!tank.duel.start(['friend-1','missing']);
-          const baseline=tank.scene.children.length;
-          const started=tank.duel.start(['friend-1','friend-2']);
-          const exclusive=!tank.duel.start(['friend-2','friend-3'])&&tank.duel.getIntent(tank.fish[2])===null;
-          const before=tank.fish[0].mesh.position.clone();let bounded=true;
-          tank.fish[0].mesh.position.set(-8,.6,2);tank.fish[0].velocity.set(0,0,0);
-          for(let i=0;i<150;i++)tank.update(1/60);
-          const approached=tank.fish[0].mesh.position.x>-5;
-          const bypassesFood=(tank.feed(),tank.duel.getIntent(tank.fish[0])!==null);
-          for(let i=0;i<1000;i++){
+          const tank=new Aquarium(host);tank.renderer.setAnimationLoop(null);
+          tank.setFish(DEFAULT_FISH,await Promise.all(DEFAULT_FISH.map(portraitCanvas)));
+          tank.dance=new FishDance(tank);const baseline=tank.scene.children.length;
+          const start=tank.fish.map(f=>f.mesh.position.clone());
+          const started=tank.dance.start(),exclusive=!tank.dance.start();
+          let bounded=true;
+          for(let i=0;i<240;i++){
             tank.update(1/60);
-            bounded&&=tank.fish.every(f=>Number.isFinite(f.mesh.position.x)&&Math.abs(f.mesh.position.x)<=9.5&&Math.abs(f.mesh.position.z)<=3.7);
+            bounded&&=[...tank.fish,...tank.school].every(({mesh:m},i)=>Number.isFinite(m.position.x)&&Math.abs(m.position.x)<=9.5&&m.position.y>=-3&&m.position.y<=3.7&&Math.abs(m.position.z)<=(i<tank.fish.length?3.7:4.2));
           }
-          const moved=tank.fish[0].mesh.position.distanceTo(before)>.2;
-          const ended=!tank.duel.active&&events.some(e=>e.phase==='finished'&&['friend-1','friend-2'].includes(e.winner));
-          const cleaned=tank.scene.children.length===baseline&&tank.duel.getIntent(tank.fish[0])===null;
-          tank.duel.start(['friend-2','friend-3']);tank.duel.cancel();
-          const cancelled=!tank.duel.active&&tank.scene.children.length===baseline;
-          tank.duel.dispose();tank.observer.disconnect();tank.controls.dispose();tank.renderer.dispose();host.remove();
-          return {invalid,started,exclusive,approached,bypassesFood,bounded,moved,ended,cleaned,cancelled};
+          const moved=tank.fish.every((f,i)=>f.mesh.position.distanceTo(start[i])>.2);
+          const facing=()=>[...tank.fish,...tank.school].every(({mesh:m})=>new THREE.Vector3(1,0,0).applyQuaternion(m.quaternion).dot(tank.camera.position.clone().sub(m.position).normalize())>.995);
+          const front=facing();tank.camera.position.set(8,4,25);tank.camera.lookAt(0,0,0);
+          tank.update(1/60);const followsCamera=facing();
+          const spots=[];tank.dance.group.traverse(o=>{if(o.isSpotLight)spots.push(o)});
+          const lighting=()=>spots.map(o=>[o.intensity,o.color.getHex(),...o.target.position.toArray()]);
+          const lightBefore=JSON.stringify(lighting());
+          const overhead=spots.length>1&&spots.every(o=>o.position.y>4&&o.intensity>0);
+          const before=tank.fish.map(f=>f.mesh.position.y);
+          for(let i=0;i<10;i++)tank.update(1/60);
+          const steps=tank.fish.map((f,i)=>f.mesh.position.y-before[i]);
+          const inSync=Math.abs(steps[0])>.03&&Math.max(...steps)-Math.min(...steps)<.015;
+          const visibleLights=overhead&&JSON.stringify(lighting())!==lightBefore;
+          const lightsBeforePause=JSON.stringify(lighting());
+          const positions=tank.fish.map(f=>f.mesh.position.clone());
+          tank.paused=true;tank.frame(1000);tank.frame(1030);
+          const paused=tank.fish.every((f,i)=>f.mesh.position.distanceTo(positions[i])<1e-8)&&JSON.stringify(lighting())===lightsBeforePause;
+          tank.setNight(true);tank.dance.stop();
+          const restored=!tank.dance.active&&tank.scene.children.length===baseline&&Math.abs(tank.ambient.intensity-.85)<1e-8;
+          let repeatable=true;
+          for(let i=0;i<3;i++){tank.dance.start();tank.update(.1);tank.dance.stop();repeatable&&=tank.scene.children.length===baseline;}
+          tank.paused=false;const after=tank.fish.map(f=>f.mesh.position.clone());
+          for(let i=0;i<120;i++)tank.update(1/60);
+          const swimming=tank.fish.every((f,i)=>f.mesh.position.distanceTo(after[i])>.1&&Math.abs(f.mesh.rotation.x)<1e-8);
+          tank.dance.dispose();tank.observer.disconnect();tank.controls.dispose();tank.renderer.dispose();host.remove();
+          return {started,exclusive,bounded,moved,front,followsCamera,inSync,visibleLights,paused,restored,repeatable,swimming};
         }""")
         self.assertTrue(all(result.values()),result)
+
+    def test_mobile_reduced_motion_dance_can_be_started_and_stopped(self):
+        self.page.set_viewport_size({'width':390,'height':844})
+        self.page.emulate_media(reduced_motion='reduce');self.open()
+        expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','true')
+        self.page.locator('#dance').click()
+        expect(self.page.locator('#pause')).to_have_attribute('aria-pressed','false')
+        expect(self.page.locator('#dance')).to_have_attribute('aria-pressed','true')
+        self.assertFalse(self.page.evaluate('document.documentElement.scrollWidth > innerWidth'))
+        self.page.locator('#dance').focus();self.page.keyboard.press('Enter')
+        expect(self.page.locator('#dance')).to_have_attribute('aria-pressed','false')
+
     def test_webgl_failure(self):
         self.page.add_init_script("const original=HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext=function(type,...args){return type.startsWith('webgl')?null:original.call(this,type,...args)}")
         self.page.goto(os.environ.get('AQUARIUM_URL','http://127.0.0.1:4173'))

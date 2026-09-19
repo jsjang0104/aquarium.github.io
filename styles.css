@@ -749,113 +749,125 @@ footer > span:last-child {
   }
 }
 
-.duel-panel {
-  margin: 8px 0 30px;
-  padding: 24px;
-  border: 1px solid rgba(173, 242, 213, 0.18);
-  border-radius: 16px;
-  background: rgba(173, 242, 213, 0.035);
-}
-.duel-heading {
+.dance-panel {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
+  margin: 20px 0 4px;
+  padding: 22px 24px;
+  border: 1px solid #c6a5f52e;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #aa75f50d, #ed92c40c, #70dfff08);
 }
-.duel-heading h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-.duel-heading h2 span {
-  margin-left: 10px;
-  color: #91b2af;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-}
-.duel-heading p,
-#duel-status {
-  color: #91b2af;
-  font-size: 12px;
-  line-height: 1.7;
-}
-.duel-picker {
-  display: flex;
-  align-items: flex-end;
-  gap: 14px;
-  margin-top: 16px;
-}
-.duel-picker label {
-  flex: 1;
-  color: #adf2d5;
-  font-size: 11px;
+.dance-copy {
   min-width: 0;
 }
-.duel-picker label[for='duel-second'] {
-  color: #ffb58c;
+.dance-copy h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
 }
-.duel-picker select {
-  width: 100%;
-  margin-top: 8px;
-  padding: 11px;
-  color: #e3f1e9;
-  background: #13343a;
-  border: 1px solid #45605f;
-  border-radius: 9px;
-  font: inherit;
-  font-size: 14px;
+.dance-copy h2 span {
+  display: inline-block;
+  margin-left: 10px;
+  color: #b9a8d1;
+  font-size: 9px;
+  letter-spacing: 1.6px;
 }
-.duel-vs {
-  align-self: center;
-  padding-top: 20px;
-  color: #91b2af;
-  font-size: 12px;
-  font-weight: 600;
+#dance-status {
+  margin: 9px 0 0;
+  color: #a2b4b8;
+  font-size: 11px;
+  line-height: 1.7;
 }
-#duel-start {
-  background: #adf2d5;
-  color: #163a3b;
+.dance-button {
+  flex-shrink: 0;
+  min-width: 130px;
+  background: linear-gradient(120deg, #d0b7ff, #aeeaf0);
+  color: #24263e;
+  border-color: #e0cfff60;
+  box-shadow: 0 4px 22px #c69aff18;
 }
-#duel-status {
-  margin: 16px 0 0;
+.dance-button:hover {
+  background: linear-gradient(120deg, #e2ceff, #c7f6ee);
 }
-@media (max-width: 650px) {
-  .duel-panel {
-    padding: 18px;
-  }
-  .duel-heading {
-    display: block;
-  }
-  .duel-picker {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 10px;
-  }
-  #duel-start {
-    grid-column: 1 / 3;
-  }
-  .duel-picker .button {
-    justify-content: center;
-    padding: 11px;
-  }
+.dance-button[aria-pressed='true'] {
+  background: #312741;
+  color: #edceff;
+  border-color: #d0a5f570;
 }
-
-.duel-banner {
+.dance-button > span:first-child {
+  font-size: 22px;
+}
+.tank-card.is-dancing {
+  border-color: #c5a8f580;
+  box-shadow: 0 0 50px #a973e524;
+}
+.dance-banner {
   position: absolute;
-  bottom: 54px;
-  left: 22px;
-  right: 22px;
-  width: fit-content;
-  max-width: calc(100% - 44px);
-  padding: 9px 14px;
-  border: 1px solid #adf2d540;
-  border-radius: 10px;
-  background: #0c292de8;
-  color: #e3f1e9;
-  font-size: 12px;
-  line-height: 1.6;
+  top: 60px;
+  left: 25px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid #dbb5ff45;
+  border-radius: 8px;
+  background: #17142ac9;
+  color: #ead5ff;
+  font-size: 9px;
+  letter-spacing: 1.5px;
   pointer-events: none;
 }
-.duel-picker button:disabled {
-  cursor: not-allowed;
+#dance-bpm {
+  color: #b2ede1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.dance-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 16px;
+}
+.dance-bars i {
+  width: 3px;
+  height: 10px;
+  border-radius: 2px;
+  background: #d3b9ff;
+}
+.dance-bars i:nth-child(2) {
+  height: 16px;
+  background: #aeeaf0;
+}
+.dance-bars i:nth-child(3) {
+  height: 7px;
+  background: #ffb8d9;
+}
+.dance-bars i:nth-child(4) {
+  height: 12px;
+}
+@media (max-width: 650px) {
+  .dance-panel {
+    padding: 18px;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .dance-copy h2 {
+    font-size: 14px;
+  }
+  .dance-copy h2 span {
+    font-size: 8px;
+    margin-left: 7px;
+  }
+  .dance-button {
+    width: 100%;
+  }
+  .dance-banner {
+    top: 52px;
+    left: 16px;
+    font-size: 8px;
+  }
 }

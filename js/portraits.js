@@ -5,7 +5,7 @@ export const DEFAULT_FISH = [
     name: '채붕이',
     src: './KakaoTalk_Photo_2026-09-14-21-55-43.jpeg',
     color: PALETTE[0],
-    crop: { x: 0.45, y: 0.34, zoom: 1.5 },
+    crop: { x: 0.45, y: 0.34, zoom: 1.8 },
   },
   {
     id: 'friend-2',
@@ -19,14 +19,14 @@ export const DEFAULT_FISH = [
     name: '장꽉수',
     src: './KakaoTalk_Photo_2026-09-14-21-57-38.jpeg',
     color: PALETTE[2],
-    crop: { x: 0.54, y: 0.49, zoom: 2.2 },
+    crop: { x: 0.54, y: 0.49, zoom: 2.5 },
   },
   {
     id: 'friend-4',
     name: '하붕이',
     src: './KakaoTalk_Photo_2026-09-14-23-38-10.jpeg',
     color: PALETTE[3],
-    crop: { x: 0.42, y: 0.645, zoom: 1.1 },
+    crop: { x: 0.42, y: 0.645, zoom: 1.3 },
   },
   {
     id: 'friend-5',
@@ -40,14 +40,14 @@ export const DEFAULT_FISH = [
     name: '아그다',
     src: './KakaoTalk_Photo_2026-09-16-22-58-49.jpeg',
     color: PALETTE[4],
-    crop: { x: 0.515, y: 0.465, zoom: 2.2 },
+    crop: { x: 0.515, y: 0.465, zoom: 2.5 },
   },
   {
     id: 'friend-7',
     name: '홍햄',
     src: './KakaoTalk_Photo_2026-09-17-17-21-11.jpeg',
     color: PALETTE[1],
-    crop: { x: 0.5, y: 0.47, zoom: 1.15 },
+    crop: { x: 0.5, y: 0.47, zoom: 1.5 },
   },
   {
     id: 'friend-8',

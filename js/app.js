@@ -72,6 +72,7 @@ async function renderFish() {
 }
 function syncPause() {
   if (!aquarium) return;
+  aquarium.dance?.syncMusic();
   $('#pause').setAttribute('aria-pressed', String(aquarium.paused));
   $('#pause-icon').textContent = aquarium.paused ? '▷' : 'Ⅱ';
   $('#pause-label').textContent = aquarium.paused ? '다시 헤엄' : '잠깐 멈춤';
@@ -101,6 +102,7 @@ $('#pause').addEventListener('click', () => {
 });
 $('#speed').addEventListener('input', (event) => {
   aquarium.speed = Number(event.target.value);
+  aquarium.dance?.syncMusic();
   $('#speed-value').textContent = `${aquarium.speed.toFixed(1)}×`;
   syncDanceControls();
 });
@@ -188,7 +190,10 @@ function syncDanceControls() {
     : '버튼을 누르면 조명이 켜지고, 모든 친구들이 함께 춤춰요.';
 }
 if (aquarium && $('#scene-error').hidden) {
-  aquarium.dance = new FishDance(aquarium, { onChange: syncPause });
+  aquarium.dance = new FishDance(aquarium, {
+    onChange: syncPause,
+    onMusicError: () => toast('음악을 재생하지 못했어요. 춤을 껐다가 다시 켜주세요.'),
+  });
 }
 $('#dance').addEventListener('click', () => {
   if (!aquarium?.dance) return;

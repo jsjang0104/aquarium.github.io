@@ -6,9 +6,14 @@ const BPM = 120;
 
 /** One clock drives the whole school's choreography and ceiling lights. */
 export class FishDance {
-  constructor(aquarium, { onChange = () => {} } = {}) {
+  constructor(aquarium, { onChange = () => {}, onMusicError = () => {} } = {}) {
     this.aquarium = aquarium;
     this.onChange = onChange;
+    this.onMusicError = onMusicError;
+    this.music = new Audio();
+    this.music.preload = 'none';
+    this.music.loop = true;
+    this.music.src = new URL('../bgm.mp3', import.meta.url).href;
     this.active = false;
     this.time = 0;
     this.dancers = [];
@@ -49,9 +54,24 @@ export class FishDance {
     this.buildLights();
     this.applyLighting();
     this.update(0);
+    this.syncMusic();
     tank.play?.status();
     this.onChange();
     return true;
+  }
+  syncMusic() {
+    if (!this.active || this.aquarium.paused) {
+      this.music.pause();
+      return;
+    }
+    this.music.playbackRate = this.aquarium.speed;
+    if (this.music.paused) {
+      this.music.play().catch((error) => {
+        if (error.name !== 'AbortError' && this.active && !this.aquarium.paused) {
+          this.onMusicError();
+        }
+      });
+    }
   }
   buildLights() {
     this.group = new THREE.Group();
@@ -230,6 +250,8 @@ export class FishDance {
     this.sparkles.material.opacity = fade * (0.45 + pulse * 0.3 * amplitude);
   }
   stop() {
+    this.music.pause();
+    this.music.currentTime = 0;
     if (!this.active) return;
     this.active = false;
     const tank = this.aquarium;
